@@ -1,0 +1,3 @@
+4/8/2020 | 7:30pm | 8:00pm | Preparation | Reading specifications
+4/8/2020 | 8:00pm | 8:51pm | Subset 0 | Completed MVP - Passes Autotest
+4/8/2020 | 8:51pm | 10:21pm | Subset 1 | Completed MVP - Passes Autotest
