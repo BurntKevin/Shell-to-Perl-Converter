@@ -20,11 +20,6 @@ do
     case $line in
         "Boo") echo "Wow... I am disappointed"; exit 0;
         ;;
-        *)
-            for i in $(seq 10)
-            do
-                echo $line
-            done
-        ;;
+        *) echo $line;
     esac
 done
