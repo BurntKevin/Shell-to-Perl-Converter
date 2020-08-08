@@ -441,7 +441,7 @@ sub handleAssignment() {
             $words[1] =~ s/`//;
 
             print "$words[0] = " . convertExpression($words[1]) . ";\n";
-        } elsif ($words[1] =~ /$/) {
+        } elsif ($words[1] =~ /\$/) {
             print "$words[0] = $words[1];\n";
         } else {
             print "$words[0] = '" . convertString($words[1]) . "';\n";
