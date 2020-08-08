@@ -109,11 +109,66 @@ sub transformSingleLine() {
     } elsif (handleWhile($line, $indent)) {
     } elsif (handleFunction($line, $indent)) {
     } elsif (handleLocal($line, $indent)) {
+    } elsif (handleTestStatement($line, $indent)) {
     } elsif (handleClosingCurlyBracket($line, $indent)) {
-    } elsif (handleReturn($line, $indent)) {
-    } elsif (handleFunctionCall($line, $indent)) {
     } elsif (handleLs($line, $indent)) {
     } else { handleSystem($line, $indent); }
+}
+
+# Handles a test function - is buggy, does not consider both && and || case
+# And cases where there are more than two chaining statements
+sub handleTestStatement() {
+    # Obtaining input
+    my $line = $_[0];
+    my $indent = $_[1];
+
+    # Checking if the command is a test command
+    if ($line =~ /^test /) {
+        my @sections = splitByAnd($line);
+        @sections = splitByOr($line) if scalar @sections == 1;
+
+        my @test = split " ", $sections[0];
+        handleCondition(@test);
+        for (my $i = 1; $i < scalar @sections; $i++) {
+            print " and ";
+
+            # Finds the correct method which is able to handle input
+            if (handleEcho($sections[$i], $endNewLine, $indent)) {
+            } elsif (handleAssignment($sections[$i], $indent, $indent)) {
+            } elsif (handleCd($sections[$i], $indent)) {
+            } elsif (handleExit($sections[$i], $indent)) {
+            } elsif (handleComment($sections[$i], $indent)) {
+            } elsif (handleFunction($sections[$i], $indent)) {
+            } elsif (handleLocal($sections[$i], $indent)) {
+            } elsif (handleReturn($sections[$i], $indent)) {
+            } elsif (handleLs($sections[$i], $indent)) {
+            } else { handleSystem($sections[$i], $indent); }
+        }
+
+        return 1;
+    }
+}
+
+# Helper function to split a string by &&
+sub splitByAnd() {
+    # Obtaining input
+    my $line = $_[0];
+
+    # Splits by &&
+    my @sections = split " && ", $line;
+
+    return @sections;
+}
+
+# Helper function to split a string by ||
+sub splitByOr() {
+    # Obtaining input
+    my $line = $_[0];
+
+    # Splits by &&
+    my @sections = split " || ", $line;
+
+    return @sections;
 }
 
 # Handles a shell call to check for files
@@ -345,7 +400,11 @@ sub handleCondition() {
     my @words = @_;
 
     # Checking type of condition used
-    if ($words[0] eq "test") {
+    if ($words[1] =~ /^\$\(\(/) {
+        # A test in using expression
+        shift @words;
+        handleExpressionTest(@words);
+    } elsif ($words[0] eq "test") {
         # A test in shell
         shift @words;
         handleTest(@words);
@@ -364,16 +423,36 @@ sub handleCondition() {
     }
 }
 
+# Handles a test which uses expression
+sub handleExpressionTest() {
+    # Obtaining input
+    my @lines = @_;
+
+    # Obtaining expression segment
+    my $joinedLines = join " ", @lines;
+    my @tmp = split /\)\)/, $joinedLines;
+    $joinedLines = @tmp[0];
+
+    # Handling expression segment
+    print convertExpression($joinedLines);
+
+    # Handing rest of condition
+    shift @tmp;
+    my $joinedLines = join " ", @tmp;
+    @lines = split " ", $joinedLines;
+    handleTest(@lines);
+}
+
 # Handles a test run by the command line
 sub handleSystemTest() {
     # Obtaining input
-    my @line = @_;
+    my @lines = @_;
 
     # Setting up printing string
     my $string = "system \"";
 
     # Obtaining data for the string
-    foreach $line (@line) {
+    foreach $line (@lines) {
         $string = $string . "$line ";
     }
     # Removing trailing space
@@ -431,6 +510,8 @@ sub handleTest() {
             $string = "$string '$word'";
         }
     }
+    # Removing starting space
+    $string =~ s/^ //;
 
     print $string;
 }
@@ -808,6 +889,8 @@ sub convertExpression() {
             $string = "$string * ";
         } elsif ($variable eq "/" || $variable eq "'/'") {
             $string = "$string / ";
+        } elsif ($variable eq "%" || $variable eq "'%'") {
+            $string = "$string % ";
         } elsif ($variable =~ /^\$/) {
             # Variables do not need extra information
             $string = $string . $variable;
