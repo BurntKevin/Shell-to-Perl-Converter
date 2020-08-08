@@ -7,6 +7,7 @@ main();
 sub main() {
     # Obtaining file data
     my @lines = obtainFileToConvert();
+    my @functions = ();
 
     # Going through all lines in shell for conversion
     for (my $i = 0, my $inFunction = 0; $i < scalar @lines; $i++) {
@@ -20,7 +21,7 @@ sub main() {
 
         # Handling one segment of the line at a time
         foreach $section (@sections) {
-            transformSingleLine($section, $inFunction, $indent);
+            @functions = transformSingleLine($section, $inFunction, $indent, @functions);
         }
     }
 }
@@ -84,6 +85,7 @@ sub transformSingleLine() {
     my $line = $_[0];
     my $inFunction = $_[1];
     my $indent = $_[2];
+    my $functions = @_[3];
     my $endNewLine = ($line =~ /\n$/) ? 1 : 0;
 
     # Cleaning input
@@ -92,7 +94,7 @@ sub transformSingleLine() {
     # Finds the correct method which is able to handle input
     if (handleFileType($line, $indent)) {
     } elsif (handleEcho($line, $endNewLine, $indent)) {
-    } elsif (handleAssignment($line, $indent, $indent)) {
+    } elsif (handleAssignment($line, $indent)) {
     } elsif (handleCd($line, $indent)) {
     } elsif (handleEmptyLine($line, $indent)) {
     } elsif (handleFor($line, $indent)) {
@@ -108,11 +110,43 @@ sub transformSingleLine() {
     } elsif (handleComment($line, $indent)) {
     } elsif (handleWhile($line, $indent)) {
     } elsif (handleFunction($line, $indent)) {
+        push @functions, getWordSplitBySpace($line, 0);
     } elsif (handleLocal($line, $indent)) {
     } elsif (handleTestStatement($line, $indent)) {
     } elsif (handleClosingCurlyBracket($line, $indent)) {
     } elsif (handleLs($line, $indent)) {
+    } elsif (handleFunctionCall($line, $indent, @functions)) {
     } else { handleSystem($line, $indent); }
+
+    return @functions;
+}
+
+# Handles function calls
+sub handleFunctionCall() {
+    # Obtaining input
+    my ($line, $indent, @functions) = @_;
+
+    # Obtaining function
+    my $functionName = getWordSplitBySpace($line, 0);
+
+    # Checking if the function already exists
+    if (grep $_ == $functionName, @functions) {
+        print $indent . "$line;\n";
+    }
+}
+
+# Obtains the second word in a string
+sub getWordSplitBySpace() {
+    # Obtaining input
+    my $line = $_[0];
+    $line =~ s/[^a-zA-z ]//g;
+    my $index = $_[1];
+
+    # Parsing input to obtain first word
+    my @tmp = split " ", $line;
+    my $word = $tmp[$index];
+
+    return $word;
 }
 
 # Handles a test function - is buggy, does not consider both && and || case
@@ -127,22 +161,24 @@ sub handleTestStatement() {
         my @sections = splitByAnd($line);
         @sections = splitByOr($line) if scalar @sections == 1;
 
+        # Parsing first part of test
+        print $indent;
         my @test = split " ", $sections[0];
         handleCondition(@test);
         for (my $i = 1; $i < scalar @sections; $i++) {
-            print " and ";
+            print " and";
 
             # Finds the correct method which is able to handle input
-            if (handleEcho($sections[$i], $endNewLine, $indent)) {
-            } elsif (handleAssignment($sections[$i], $indent, $indent)) {
-            } elsif (handleCd($sections[$i], $indent)) {
-            } elsif (handleExit($sections[$i], $indent)) {
-            } elsif (handleComment($sections[$i], $indent)) {
-            } elsif (handleFunction($sections[$i], $indent)) {
-            } elsif (handleLocal($sections[$i], $indent)) {
-            } elsif (handleReturn($sections[$i], $indent)) {
-            } elsif (handleLs($sections[$i], $indent)) {
-            } else { handleSystem($sections[$i], $indent); }
+            if (handleEcho($sections[$i], $endNewLine, " ")) {
+            } elsif (handleAssignment($sections[$i], " ")) {
+            } elsif (handleCd($sections[$i], " ")) {
+            } elsif (handleExit($sections[$i], " ")) {
+            } elsif (handleComment($sections[$i], " ")) {
+            } elsif (handleFunction($sections[$i], " ")) {
+            } elsif (handleLocal($sections[$i], " ")) {
+            } elsif (handleReturn($sections[$i], " ")) {
+            } elsif (handleLs($sections[$i], " ")) {
+            } else { handleSystem($sections[$i], " "); }
         }
 
         return 1;
@@ -434,7 +470,7 @@ sub handleExpressionTest() {
     $joinedLines = @tmp[0];
 
     # Handling expression segment
-    print convertExpression($joinedLines);
+    print convertExpression($joinedLines) . " ";
 
     # Handing rest of condition
     shift @tmp;
