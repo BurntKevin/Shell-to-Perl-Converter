@@ -6,3 +6,4 @@
 5/8/2020 | 10:33am | 12:33pm | Subset 3 | Partially completed, missing case of #
 5/8/2020 | 12:33pm | 1:00pm | Revision | Looked at example 4 examples and planning to redo
 7/8/2020 | 7:36am | 9:55am | Refactoring | Cleaned up code and removed patch work
+8/8/2020 | 3:14pm | 7:12pm | Subset 4 | Trying to finish cases, stopping at the chaining statements with &&
