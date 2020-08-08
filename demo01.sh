@@ -13,7 +13,7 @@ read line
 
 # Not letting the audience say their feedback
 echo "Sorry, don't trust you"
-exit
+exit 0
 for i in $(seq 10)
 do
     echo $line

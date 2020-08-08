@@ -10,20 +10,39 @@ sub main() {
     my @functions = ();
 
     # Going through all lines in shell for conversion
-    for (my $i = 0, my $inFunction = 0; $i < scalar @lines; $i++) {
+    for (my $i = 0, my $inFunction = 0, my $switchVariable; $i < scalar @lines; $i++) {
         # Parsing input for useful information
         my $line = $lines[$i];
         my $indent = getIndent($line);
         $inFunction = inFunctionCheck($line, $inFunction);
+        $switchVariable = getSwitchVariable($line, $switchVariable);
 
         # Splitting lines with multiple statements
         my @sections = lineCommentSections($line);
 
         # Handling one segment of the line at a time
         foreach $section (@sections) {
-            @functions = transformSingleLine($section, $inFunction, $indent, @functions);
+            @functions = transformSingleLine($section, $inFunction, $switchVariable, $indent, @functions);
         }
     }
+}
+
+# Obtain's a switch's variable if applicable
+sub getSwitchVariable() {
+    # Obtaining data
+    my $line = $_[0];
+    my $switchVariable = $_[1];
+
+    # Checking for a new potential variable
+    if ($line =~ /case /) {
+        # Found new variable
+        @words = split " ", $line;
+
+        return $words[1];
+    }
+
+    # Did not find a new variable
+    return $switchVariable
 }
 
 # Splits lines which have a comment in them
@@ -84,8 +103,9 @@ sub transformSingleLine() {
     # Obtaining input
     my $line = $_[0];
     my $inFunction = $_[1];
-    my $indent = $_[2];
-    my $functions = @_[3];
+    my $switchVariable = @_[2];
+    my $indent = $_[3];
+    my $functions = @_[4];
     my $endNewLine = ($line =~ /\n$/) ? 1 : 0;
 
     # Cleaning input
@@ -116,9 +136,96 @@ sub transformSingleLine() {
     } elsif (handleClosingCurlyBracket($line, $indent)) {
     } elsif (handleLs($line, $indent)) {
     } elsif (handleFunctionCall($line, $indent, @functions)) {
+    } elsif (handleCases($line, $indent, $switchVariable)) {
+    } elsif (handleStartCase($line)) {
+    } elsif (handleEndCase($line)) {
+    } elsif (handleContinueCase($line)) {
     } else { handleSystem($line, $indent); }
 
     return @functions;
+}
+
+# Handles separate of a switch statement
+sub handleContinueCase() {
+    # Obtaining input
+    my $line = $_[0];
+
+    if ($line =~ /;;/) {
+        return 1;
+    }
+}
+
+# Handles start of a switch
+sub handleStartCase() {
+    # Obtaining input
+    my $line = $_[0];
+
+    if ($line =~ /^case /) {
+        return 1;
+    }
+}
+
+# Handles emd of a switch
+sub handleEndCase() {
+    # Obtaining input
+    my $line = $_[0];
+
+    if ($line =~ /esac/) {
+        return 1;
+    }
+}
+
+# Handles cases of a switch
+sub handleCases() {
+    # Obtaining input
+    my $line = $_[0];
+    my $indent = $_[1];
+    my $switchVariable = $_[2];
+    my $endNewLine = 1;
+
+    # Checking if it is a switch statement
+    if ($line =~ /^[^ ]*\) /) {
+        # Printing condition
+        @words = split /\)/, $line;
+        $line =~ s/^[^\)]*\)//;
+        print $indent . "if ($switchVariable eq $words[0]) {\n";
+
+        # Printing statements
+        @words = split ";", $line;
+        foreach $word (@words) {
+            # Cleaning input
+            $word = cleanLine($word, $inFunction);
+
+            # Parse input
+            print $indent;
+            if (handleEcho($word, $endNewLine, "    ")) {
+            } elsif (handleAssignment($word, "    ")) {
+            } elsif (handleCd($word, "    ")) {
+            } elsif (handleEmptyLine($word, "    ")) {
+            } elsif (handleFor($word, "    ")) {
+            } elsif (handleDo($word)) {
+            } elsif (handleDone($word, "    ")) {
+            } elsif (handleExit($word, "    ")) {
+            } elsif (handleRead($word, "    ")) {
+            } elsif (handleIf($word, "    ")) {
+            } elsif (handleThen($word)) {
+            } elsif (handleElif($word, "    ")) {
+            } elsif (handleElse($word, "    ")) {
+            } elsif (handleFi($word, "    ")) {
+            } elsif (handleComment($word, "    ")) {
+            } elsif (handleWhile($word, "    ")) {
+            } elsif (handleLocal($word, "    ")) {
+            } elsif (handleTestStatement($word, "    ")) {
+            } elsif (handleClosingCurlyBracket($word, "    ")) {
+            } elsif (handleLs($word, "    ")) {
+            } elsif (handleFunctionCall($word, "    ", @functions)) {
+            } elsif (handleCases($word, "    ", $switchVariable)) {
+            } else { handleSystem($word, "    "); }
+        }
+
+        print "$indent}\n";
+    }
+
 }
 
 # Handles function calls
@@ -402,7 +509,6 @@ sub handleThen() {
 
     # Checks if the statement is a then statement
     if ($line eq "then") {
-
         print "{ \n";
     }
 }
@@ -503,6 +609,30 @@ sub handleTrueCondition() {
     print "1";
 }
 
+# Handles square bracket tests
+sub handleSquareBracketTest() {
+    # Obtaining input
+    my @words = @_;
+
+    # Checking type of square bracket
+    if ($words[0] =~ /-/) {
+        # Checking type of variable
+        if ($words[1] =~ /^\d+$/) {
+            # A number does not need to be quoted
+            print "$words[0] $word[1]";
+        } elsif ($words[1] =~ /\".*\"/) {
+            # Word already quoted
+            print "$words[0] $word[1]";
+        } else {
+            # A string needs to be quoted
+            print "$words[0] '$words[1]'";
+        }
+    } else {
+        # Should be directed to test as [ ] is used as test
+        handleTest(@words);
+    }
+}
+
 # Handles the conversion of test strings
 sub handleTest() {
     # Obtaining input
@@ -521,22 +651,46 @@ sub handleTest() {
         } elsif ($word eq "-d") {
             $string = "$string $word";
         } elsif ($word eq "-le") {
-            $string = "$string <="
+            if ($word =~ /^\d+$/) {
+                $string = "$string <=";
+            } else {
+                $string = "$string le";
+            }
         } elsif ($word eq "-lt") {
-            $string = "$string <";
+            if ($word =~ /^\d+$/) {
+                $string = "$string <";
+            } else {
+                $string = "$string lt";
+            }
         } elsif ($word eq "-ge") {
-            $string = "$string >=";
+            if ($word =~ /^\d+$/) {
+                $string = "$string >=";
+            } else {
+                $string = "$string ge";
+            }
         } elsif ($word eq "-gt") {
-            $string = "$string >";
-        } elsif ($word eq "-eq") {
-            $string = "$string ==";
-        } elsif ($word eq "-ne") {
-            $string = "$string !=";
+            if ($word =~ /^\d+$/) {
+                $string = "$string >";
+            } else {
+                $string = "$string gt";
+            }
+        } elsif ($word eq "-eq" || $word eq "==") {
+            if ($word =~ /^\d+$/) {
+                $string = "$string ==";
+            } else {
+                $string = "$string eq";
+            }
+        } elsif ($word eq "-ne" || $word eq "!=") {
+            if ($word =~ /^\d+$/) {
+                $string = "$string !=";
+            } else {
+                $string = "$string ne";
+            }
         } elsif ($word eq "-o" || $word eq "||") {
             $string = "$string ||";
         } elsif ($word eq "-a" || $word eq "&&") {
             $string = "$string &&";
-        } elsif ($word =~ /^\$/) {
+        } elsif ($word =~ /^\$/ || $word =~ /\".*\"/ || $word =~ /\'.*\'/) {
             $string = "$string $word";
         } elsif ($word =~ /^\d+$/ || $word =~ /^\$/ || $word =~ /^\@/) {
             # Word is not a condition, checking if it has to be quoted
@@ -550,21 +704,6 @@ sub handleTest() {
     $string =~ s/^ //;
 
     print $string;
-}
-
-# Handles square bracket tests
-sub handleSquareBracketTest() {
-    # Obtaining input
-    my @words = @_;
-
-    # Checking type of variable
-    if ($word =~ /^\d+$/) {
-        # A number does not need to be quoted
-        print "$word";
-    } else {
-        # A string needs to be quoted
-        print "$words[0] '$words[1]'";
-    }
 }
 
 # Obtains the amount of spaces infront of a string

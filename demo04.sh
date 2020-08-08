@@ -18,7 +18,7 @@ do
 
     # Letting them shout on the speakers until they do bad things
     case $line in
-        "Boo") echo "Wow... I am disappointed"; exit;
+        "Boo") echo "Wow... I am disappointed"; exit 0;
         ;;
         *)
             for i in $(seq 10)

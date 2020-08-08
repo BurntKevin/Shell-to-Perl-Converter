@@ -25,6 +25,6 @@ do
         done
     else
         echo "Wow... I am disappointed"
-        exit
+        exit 0
     fi
 done
