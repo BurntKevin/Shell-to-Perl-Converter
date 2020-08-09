@@ -165,11 +165,12 @@ sub handleStartCase() {
     }
 }
 
-# Handles emd of a switch
+# Handles end of a switch
 sub handleEndCase() {
     # Obtaining input
     my $line = $_[0];
 
+    # Checking if it is the end case - esac
     if ($line eq "esac") {
         return 1;
     }
