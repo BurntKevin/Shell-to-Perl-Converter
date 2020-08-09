@@ -14,5 +14,5 @@
 9/8/2020 | 10:43am | 11:15am | Test01 | Completed test 01 and fixed code according to what I saw which was broken
 9/8/2020 | 11:15am | 10:42am | Test02 | Completed test 02 and fixed code according to what I saw which was broken
 9/8/2020 | 11:42am | 12:20pm | Test03 | Completed test 03 and fixed code according to what I saw which was broken
-9/8/2020 | 12:20pm | 1:10pm | Test04 | Completed test 03 and fixed code according to what I saw which was broken
-9/8/2020 | 1:10pm | 2:40pm | Finalising Overall Work | Checked over work for style
+9/8/2020 | 12:20pm | 1:12pm | Test04 | Completed test 04 and fixed code according to what I saw which was broken
+9/8/2020 | 1:12pm | 2:50pm | Finalising Overall Work | Checked over work for style

@@ -31,6 +31,7 @@ echo $f
 echo $g
 # Difficult to pass - randomly placed special characters
 echo $""$1"@ARGV""\"Hello ''\\''\'''\\\\"''\'\'
+echo echo 1 echo echo 2
 
 # Style check - handling new lines - should maintain style
 
