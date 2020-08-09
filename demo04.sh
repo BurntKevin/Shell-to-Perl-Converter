@@ -1,11 +1,15 @@
 #!/bin/dash
 
-# Cheering Andrew
-say="Andrew rocks!!!"
-for i in $(seq 10)
-do
-    echo $say
-done
+cheerAndrew() {
+    # Cheering Andrew
+    say="Andrew rocks!!!"
+    for i in $(seq 10)
+    do
+        echo $say
+    done
+}
+
+cheerAndrew
 
 # Requesting audience feedback
 echo "Shout for Andrew!!!"

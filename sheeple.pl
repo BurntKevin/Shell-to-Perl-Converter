@@ -653,7 +653,7 @@ sub handleSquareBracketTest() {
     # Checking type of square bracket
     if ($words[0] =~ /-/) {
         # Checking type of variable
-        if ($words[1] =~ /^\d+$/) {
+        if ($words[1] =~ /^-?\d+$/) {
             # A number does not need to be quoted
             print "$words[0] $word[1]";
         } elsif ($words[1] =~ /\".*\"/) {
@@ -687,40 +687,40 @@ sub handleTest() {
         } elsif ($word eq "-d") {
             $string = "$string $word";
         } elsif ($word eq "-le" || $word eq "<=") {
-            if ($word =~ /^\d+$/) {
-                $string = "$string <=";
-            } else {
+            if (! $word =~ /^-?\d+$/) {
                 $string = "$string le";
+            } else {
+                $string = "$string <=";
             }
         } elsif ($word eq "-lt" || $word eq "<") {
-            if ($word =~ /^\d+$/) {
-                $string = "$string <";
-            } else {
+            if (! $word =~ /^-?\d+$/) {
                 $string = "$string lt";
+            } else {
+                $string = "$string <";
             }
         } elsif ($word eq "-ge" || $word eq ">=") {
-            if ($word =~ /^\d+$/) {
-                $string = "$string >=";
-            } else {
+            if (! $word =~ /^-?\d+$/) {
                 $string = "$string ge";
+            } else {
+                $string = "$string >=";
             }
         } elsif ($word eq "-gt" || $word eq ">") {
-            if ($word =~ /^\d+$/) {
-                $string = "$string >";
-            } else {
+            if (! $word =~ /^-?\d+$/) {
                 $string = "$string gt";
+            } else {
+                $string = "$string >";
             }
         } elsif ($word eq "-eq" || $word eq "==") {
-            if ($word =~ /^\d+$/) {
-                $string = "$string ==";
-            } else {
+            if (! $word =~ /^-?\d+$/) {
                 $string = "$string eq";
+            } else {
+                $string = "$string ==";
             }
         } elsif ($word eq "-ne" || $word eq "!=") {
-            if ($word =~ /^\d+$/) {
-                $string = "$string !=";
-            } else {
+            if (! $word =~ /^-?\d+$/) {
                 $string = "$string ne";
+            } else {
+                $string = "$string !=";
             }
         } elsif ($word eq "-o" || $word eq "||") {
             $string = "$string ||";
@@ -728,7 +728,7 @@ sub handleTest() {
             $string = "$string &&";
         } elsif ($word =~ /^\$/ || $word =~ /\".*\"/ || $word =~ /\'.*\'/) {
             $string = "$string $word";
-        } elsif ($word =~ /^\d+$/ || $word =~ /^\$/ || $word =~ /^\@/) {
+        } elsif ($word =~ /^-?\d+$/ || $word =~ /^\$/ || $word =~ /^\@/) {
             # Word is not a condition, checking if it has to be quoted
             # Digits, variables and arrays do not need to be quoted
             $string = "$string $word";
@@ -839,7 +839,7 @@ sub handleFor() {
         } else {
             # Obtaining arguments for a range
             for ($j = 2; $j < scalar @words; $j++) {
-                if ($words[$j] =~ /^\d+$/) {
+                if ($words[$j] =~ /^-?\d+$/) {
                     $inArguments = "$inArguments, $words[$j]";
                 } else {
                     $inArguments = "$inArguments, '$words[$j]'";
@@ -899,7 +899,7 @@ sub handleAssignment() {
         if ($words[1] =~ /\$\(\(/) {
             # A $(()) calculation variable
             print "$words[0] = " . convertExpression($words[1]) . ";\n";
-        } elsif ($words[1] =~ /^\d+$/) {
+        } elsif ($words[1] =~ /^-?\d+$/) {
             # A number - does not require quotes
             $words[1] = convertString($words[1]);
             print "$words[0] = $words[1];\n";
@@ -1097,7 +1097,7 @@ sub convertExpression() {
     # Parsing string
     my $string = "";
     foreach $variable (@variables) {
-        if ($variable =~ /^\d+$/) {
+        if ($variable =~ /^-?\d+$/) {
             # Digits do not need extra information
             $string = $string . $variable;
         } elsif ($variable eq "+" || $variable eq "'+'") {
