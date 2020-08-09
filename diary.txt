@@ -7,8 +7,12 @@
 5/8/2020 | 12:33pm | 1:00pm | Revision | Looked at example 4 examples and planning to redo
 7/8/2020 | 7:36am | 9:55am | Refactoring | Cleaned up code and removed patch work
 8/8/2020 | 3:14pm | 7:12pm | Subset 4 | Trying to finish cases, stopping at the chaining statements with &&
-7.12 - 8:02 | finishing off ifnal
-8:02 - 9:22  | demo time
-
-- 10:27 | Adding documentation
--12:45 | Finishing off cases - did not fully complete
+8/8/2020 | 7:12pm | 8:02pm | Finalising Work | Adding documentation and fixing small mistakes which I saw
+8/8/2020 | 8:02pm | 9:22pm | Demo Files | Created demo files based on Andrew with increasing functionality but did halter in later stages due to lack of new functionality
+8/8/2020 | 9:22pm | 12:45pm | Finalising Work | Looking over notes and adding functions which I may have missed
+9/8/2020 | 10:20am | 10:43am | Test00 | Completed test 00 and fixed code according to what I saw which was broken
+9/8/2020 | 10:43am | 11:15am | Test01 | Completed test 01 and fixed code according to what I saw which was broken
+9/8/2020 | 11:15am | 10:42am | Test02 | Completed test 02 and fixed code according to what I saw which was broken
+9/8/2020 | 11:42am | 12:20pm | Test03 | Completed test 03 and fixed code according to what I saw which was broken
+9/8/2020 | 12:20pm | 1:10pm | Test04 | Completed test 03 and fixed code according to what I saw which was broken
+9/8/2020 | 1:10pm | 2:40pm | Finalising Overall Work | Checked over work for style

@@ -17,6 +17,7 @@ do
     read line
 
     # Letting them shout on the speakers until they do bad things
+    # I am proud of my somewhat working cases :)
     case $line in
         "Boo") echo "Wow... I am disappointed"; exit 0;
         ;;

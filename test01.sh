@@ -1,15 +1,8 @@
 #!/bin/dash
 # Aims to test subset 1
 
-# Creating files - setting up environment
-touch c.f
-touch z.f
-touch a.f
-touch a.c
-touch a/f.f
-
 # Testing for, do, done, *
-for i in 
+for i in *
 do
     echo $i
 done
@@ -17,28 +10,35 @@ done
 # Testing viewing into another directory
 for i in a/*
 do
-    echo $i
+    echo Found file from a/*! $i
 done
 
 # Testing ?
 for i in ??.c
 do
-    echo $i
+    echo "Found file from ??.c! $i"
 done
 
 # Testing []
 for i in [ca].f
 do
-    echo $i
+    echo "Found file from [ca].f! $i"
+done
+
+# Testing combination
+for i in *y.[c]*
+do
+    echo "Found file from *y.[c]*! $i"
 done
 
 # Testing non-existent file
 for i in "non_existent_file.file_extension"
 do
-    echo $i
+    echo "Found seemingly non-existent file! $i"
 done
 
 # Testing read
+echo "Type something cool! Break the program!"
 read line
 echo $line
 
@@ -47,9 +47,10 @@ cd ../
 cd *
 
 # Testing exit
-exit;
-exit 5;
+exit
 
-# Cleaning up
-rm c.f z.f a.f a.c
-rm -rf a/*
+echo "Did not exit correctly on empty exit"
+
+exit 5
+
+echo "Did not exit correctly on exit 5"

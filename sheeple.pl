@@ -135,11 +135,11 @@ sub transformSingleLine() {
     } elsif (handleTestStatement($line, $indent)) {
     } elsif (handleClosingCurlyBracket($line, $indent)) {
     } elsif (handleLs($line, $indent)) {
-    } elsif (handleFunctionCall($line, $indent, @functions)) {
     } elsif (handleCases($line, $indent, $switchVariable)) {
     } elsif (handleStartCase($line)) {
     } elsif (handleEndCase($line)) {
     } elsif (handleContinueCase($line)) {
+    } elsif (handleFunctionCall($line, $indent, @functions)) {
     } else { handleSystem($line, $indent); }
 
     return @functions;
@@ -170,7 +170,7 @@ sub handleEndCase() {
     # Obtaining input
     my $line = $_[0];
 
-    if ($line =~ /esac/) {
+    if ($line eq "esac") {
         return 1;
     }
 }
@@ -238,7 +238,25 @@ sub handleFunctionCall() {
 
     # Checking if the function already exists
     if (grep $_ == $functionName, @functions) {
-        print $indent . "$line;\n";
+        # Parsing function into a perl function
+        # Obtaining useful data
+        my @words = split " ", $line;
+
+        # Parsing function
+        my $string = "$words[0](";
+        for (my $i = 1; $i < scalar @words; $i++) {
+            if ($words[$i] =~ /^-?\d+$/) {
+                # Argumement is a number
+                $string = $string . "$words[$i], ";
+            } else {
+                # Argument is a string
+                $string = $string . "\"$words[$i]\", ";
+            }
+        }
+        # Removing trailing space
+        $string =~ s/, $//;
+
+        print $indent . "$string);\n";
     }
 }
 
@@ -266,17 +284,21 @@ sub handleTestStatement() {
     # Checking if the command is a test command
     if ($line =~ /^test /) {
         my @sections = splitByAnd($line);
-        @sections = splitByOr($line) if scalar @sections == 1;
+        my $connector = " and";
+        if (scalar @sections == 1) {
+            @sections = splitByOr($line);
+            $connector = " or";
+        }
 
         # Parsing first part of test
         print $indent;
         my @test = split " ", $sections[0];
         handleCondition(@test);
         for (my $i = 1; $i < scalar @sections; $i++) {
-            print " and";
+            print $connector;
 
             # Finds the correct method which is able to handle input
-            if (handleEcho($sections[$i], $endNewLine, " ")) {
+            if (handleEcho($sections[$i], 1, " ")) {
             } elsif (handleAssignment($sections[$i], " ")) {
             } elsif (handleCd($sections[$i], " ")) {
             } elsif (handleExit($sections[$i], " ")) {
@@ -309,7 +331,7 @@ sub splitByOr() {
     my $line = $_[0];
 
     # Splits by &&
-    my @sections = split " || ", $line;
+    my @sections = split / \|\| /, $line;
 
     return @sections;
 }
@@ -550,9 +572,18 @@ sub handleCondition() {
         # A test in shell
         shift @words;
         handleTest(@words);
-    } elsif ($words[0] eq "true") {
+    } elsif ($words[0] eq "!") {
+        # A test which starts off with a not
+        print "not ";
+        shift @words;
+        shift @words;
+        handleTest(@words);
+    } elsif ($words[0] eq "true" || $words[0] eq "(true)") {
         # An special loop in shell - infinite loop
         handleTrueCondition();
+    } elsif ($words[0] eq "false" || $words[0] eq "(false)") {
+        # A special loop in shell which does not run
+        handleFalseCondition();
     } elsif ($words[0] eq "[") {
         # A square bracket test
         shift @words;
@@ -609,6 +640,11 @@ sub handleTrueCondition() {
     print "1";
 }
 
+# Handles the special while loop - infinite loop
+sub handleFalseCondition() {
+    print "0";
+}
+
 # Handles square bracket tests
 sub handleSquareBracketTest() {
     # Obtaining input
@@ -650,25 +686,25 @@ sub handleTest() {
             $string = "$string not";
         } elsif ($word eq "-d") {
             $string = "$string $word";
-        } elsif ($word eq "-le") {
+        } elsif ($word eq "-le" || $word eq "<=") {
             if ($word =~ /^\d+$/) {
                 $string = "$string <=";
             } else {
                 $string = "$string le";
             }
-        } elsif ($word eq "-lt") {
+        } elsif ($word eq "-lt" || $word eq "<") {
             if ($word =~ /^\d+$/) {
                 $string = "$string <";
             } else {
                 $string = "$string lt";
             }
-        } elsif ($word eq "-ge") {
+        } elsif ($word eq "-ge" || $word eq ">=") {
             if ($word =~ /^\d+$/) {
                 $string = "$string >=";
             } else {
                 $string = "$string ge";
             }
-        } elsif ($word eq "-gt") {
+        } elsif ($word eq "-gt" || $word eq ">") {
             if ($word =~ /^\d+$/) {
                 $string = "$string >";
             } else {
@@ -740,7 +776,7 @@ sub handleExit() {
     my $indent = $_[1];
 
     # Checking if the command is an exit command
-    if ($line =~ /^exit /) {
+    if ($line =~ /^exit / || $line eq "exit") {
         # Shell and perl have the same exit command
         print $indent . "$line;\n";
     }
@@ -782,22 +818,24 @@ sub handleFor() {
         # Parsing input into useful sections
         $line =~ s/for //;
         my @words = split " ", $line;
+        my $inArguments;
 
         # Obtaining in arguments
         if (scalar @words == 3 && $words[2] =~ /.*\..*/) {
             # Obtaining arguments for a file search
+            $words[2] = convertString($words[2]);
             $inArguments = "glob(\"$words[2]\")";
             print $indent . "foreach \$$words[0] ($inArguments)";
         } elsif ($words[2] eq "\$(seq" && scalar @words == 4) {
             # A sequence scan from 0 to a custom end
             $words[3] =~ s/\)$//;
 
-            print $indent . "for (\$i = 1; \$i <= $words[3]; \$i++)";
+            print $indent . "for (\$$words[0] = 1; \$$words[0] <= $words[3]; \$$words[0]++)";
         } elsif ($words[2] eq "\$(seq" && scalar @words == 5) {
             # A sequence scan from a custom start to a custom end
             $words[4] =~ s/\)$//;
 
-            print $indent . "for (\$i = $words[3]; \$i <= $words[4]; \$i++)";
+            print $indent . "for (\$$words[0] = $words[3]; \$$words[0] <= $words[4]; \$$words[0]++)";
         } else {
             # Obtaining arguments for a range
             for ($j = 2; $j < scalar @words; $j++) {
@@ -807,7 +845,7 @@ sub handleFor() {
                     $inArguments = "$inArguments, '$words[$j]'";
                 }
             }
-            $inArguments =~ s/, //;
+            $inArguments =~ s/^, //;
             print $indent . "foreach \$$words[0] ($inArguments)";
         }
     }
@@ -848,6 +886,7 @@ sub handleAssignment() {
     # Checks if it is an assignment
     if ($line =~ /[^ ]+=[^ ]+/) {
         # Changes the format of the data into a more accessible type
+        $line =~ s/;*$//;
         my @words = split "=", $line;
 
         # Adding indent
@@ -916,6 +955,7 @@ sub handleEcho() {
         }
 
         # Parsing input
+        $line =~ s/;*$//;
         if ($line =~ />>\$/) {
             # A >> file operation
             # Obtaining useful data
@@ -928,7 +968,8 @@ sub handleEcho() {
             # Obtaining text to write
             $line =~ s/echo //;
             $line =~ s/ .*$//;
-            print $indent . "print F \"$line\"\n";
+            $line = convertString($line);
+            print $indent . "print F \"$line\";\n";
 
             # Closing file
             print $indent . "close F;\n";
@@ -944,7 +985,8 @@ sub handleEcho() {
             # Obtaining text to write
             $line =~ s/echo //;
             $line =~ s/ .*$//;
-            print $indent . "print F \"$line\"\n";
+            $line = convertString($line);
+            print $indent . "print F \"$line\";\n";
 
             # Closing file
             print $indent . "close F;\n";
@@ -959,7 +1001,8 @@ sub handleEcho() {
             # Obtaining text to write
             $line =~ s/echo //;
             $line =~ s/ .*$//;
-            print $indent . "print F \"$line\"\n";
+            $line = convertString($line);
+            print $indent . "print F \"$line\";\n";
 
             # Closing file
             print $indent . "close F;\n";
@@ -1008,10 +1051,11 @@ sub convertString() {
 
     # Removing optional quotes placed by user
     $line =~ s/'|"//m;
-    $line =~ s/'|"$//;
+    $line =~ s/'$|"$//;
 
     # Escaping quotes
     $line =~ s/"/\\"/g;
+    $line =~ s/'/\\'/g;
 
     return $line;
 }

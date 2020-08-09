@@ -2,10 +2,12 @@
 # Aims to test subset 0
 
 # Testing = syntax
-a="Andrew";
+a=Andrew
 b="Rocks"
-c="!!!";
-a=b=c="Goo";
+c='!!!'
+a=b=c="Goo"
+# Testing implementation of dash conversion
+f=#!/bin/dash
 
 # Testing $
 e=$c
@@ -13,7 +15,10 @@ d=$c=$b
 
 # Testing comments
 # Single line comment
-# Comment # Ontop of another # Comment \n
+# Comment # Ontop of another # Comment
+# Testing empty comment #
+# Testing stacked comments
+###
 
 # Testing echo
 # Printing out previous test variables
@@ -23,6 +28,7 @@ echo $c
 echo $d
 echo $e
 echo $f
+echo $g
 # Difficult to pass - randomly placed special characters
 echo $""$1"@ARGV""\"Hello ''\\''\'''\\\\"''\'\'
 

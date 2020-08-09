@@ -3,45 +3,77 @@
 # Aims to test subset 2
 
 # Testing test and expr
+# Testing in the assignment environment
 i=5
 j=3
 k=$((10 - i - j))
 echo $k
 
+# Testing in the condition environment
 if test $((2 + 2 + 2 + $k)) -eq 8
 then
-    echo 1
+    # Testing in the echo environment
+    echo "$((2 + 2 + 2 + $k)) equals 8"
+else
+    # Testing in the echo environment
+    echo "$((2 + 2 + 2 + $k)) does not equal to 8"
 fi
 
+# Testing test flags for files
+# Testing with a non-standard initial test string
 if ! test -r "very_unlikely_to_exist.file_extension"
 then
-    echo 2
+    echo "Could not find a file which was very unlikely to exist"
+else
+    echo "Found a file which was very unlikely to exist"
 fi
 
 # Testing conditional statements
 if test 5 -lt 2
 then
-    echo 3
-elif test 2 -ge 3
+    echo 5 is less than 2
+elif test "5" -eq "2"
 then
-    echo 4
+    echo "5" is equal to "2"
 else
-    echo 5
+    echo Passed conditional statements
+fi
+
+# Testing with two conditional statements
+if test 5 -lt 2 && test 10 -lt 3
+then
+    echo 5 is less than 2 and 10 is less than 3
+fi
+
+# Testing with three conditional statements
+if test 5 -lt 2 && test 10 -lt 3 || test 10 -gt 0
+then
+    echo 10 is greater than 0
 fi
 
 # Testing while loops
-while (false)
+# Using a special variable
+while false
 do
-    echo 6
+    echo Entered into a false condition loop!
 done
 
-i=2;
+# Using a while loop
+i=2
 while test $i -ne 0
 do
     i=`expr $i - 1`
-    echo 7 @ $i
+    echo Count down from 1 to 0 - $i
+done
+
+# Using a while loop with multiple conditions
+i=2
+while ! test -r "non-existent-file" && test $i -ne 0
+do
+    i=`expr $i - 1`
+    echo Count down from 1 to 0 - $i
 done
 
 # Testing arguments given by user
-echo $@
-echo $1 $2 $3 $4 "\$5" $6 $7 $8 $9 $10 $11 $12 $1000
+echo Here are some of the arguments you gave me!: $1 $2 $3 $4 $5 $6 $7 $8 $9
+echo Here are some strange arguments: $11 $12 $1000
